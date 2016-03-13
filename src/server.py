@@ -25,6 +25,7 @@ class Response(object):
         self.code = "{} {}".format(code, reason_phrase)
         self.body = body
         self.headers = headers
+        self.headers['Connection'] = "close"
 
     def return_response_string(self):
         """Return this Response Instance's response string."""
@@ -145,33 +146,44 @@ def server():
     try:
         print("socket open")
         while True:
+            print("LISTENING")
             conn, addr = this_server.accept()
+            print("ACCEPTED", addr)
             message = server_read(conn)
-            response_msg = "TEST"
+            print("REQUEST READ IN")
             if message:
                 print(message)
                 try:
-                    uri = parse_request(message.decode("utf-8"))
-                    resolved_uri = resolve_uri(uri)
-                    response_msg = response_ok(resolved_uri[0], resolved_uri[1])
-                except RequestError as ex:
-                    response_msg = response_error(*ex.args)
-                except IOError:
-                    response_msg = response_error(404, "File Not Found")
-                finally:
-                    print(u"The requested URI is: " + uri)
+                    try:
+                        print("PARSING REQUEST")
+                        uri = parse_request(message.decode("utf-8"))
+                        print("RESOLVING URI")
+                        resolved_uri = resolve_uri(uri)
+                        print("URI IS:", uri)
+                        print("CREATING RESPONSE")
+                        response_msg = response_ok(resolved_uri[0], resolved_uri[1])
+                    except RequestError as ex:
+                        print("REQUEST ERROR")
+                        response_msg = response_error(*ex.args)
+                    except IOError:
+                        print("IO ERROR 404")
+                        response_msg = response_error(404, "File Not Found")
                     print(response_msg)
+                    print("SENDING MESSAGE NOW~~")
                     conn.sendall(response_msg)
+                    print("FINISHED SENDING MESSAGE")
+                finally:
+                    conn.shutdown(socket.SHUT_RDWR)
+                    print("SOCKET SHUTDOWN")
                     conn.close()
+                    print("SOCKET CLOSED")
+            else:
+                print("NO REQUEST READ")
 
     except KeyboardInterrupt:
-        try:
-            conn.close()
-        except NameError:
-            pass
-
+        pass
     finally:
-        print("Socket closing")
+        print("SERVER SHUTDOWN")
         this_server.close()
 
 if __name__ == "__main__":
