@@ -25,7 +25,8 @@ class Response(object):
         self.code = "{} {}".format(code, reason_phrase)
         self.body = body
         self.headers = headers
-        self.headers['Connection'] = "close"
+        if headers is not None:
+            self.headers['Connection'] = "close"
 
     def return_response_string(self):
         """Return this Response Instance's response string."""
