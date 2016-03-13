@@ -69,9 +69,7 @@ def resolve_uri(uri):
                 body += "<li>{} </li>".format(fname)
             body += "</ul>"
         body += "</body></html>"
-        print(body)
-        body.encode("utf-8")
-        print(body.encode("utf-8"))
+        body = body.encode("utf-8")
     else:
         f = io.open(path, "rb")
         body = f.read()
@@ -109,7 +107,7 @@ def make_socket():
 
 def server_read(conn):
     """Read incoming client message and create echo message to client."""
-    buffer_length = 16
+    buffer_length = 4096
     message_complete = False
     message = []
 
